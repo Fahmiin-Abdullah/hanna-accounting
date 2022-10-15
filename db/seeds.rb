@@ -5,3 +5,11 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
+
+['Debit', 'Credit'].each do |ac|
+  account = Account.create!(name: ac)
+
+  5.times do |index|
+    account.transactions.create!(description: "Test description #{index + 1}", amount: (index + 1) * 100)
+  end
+end
