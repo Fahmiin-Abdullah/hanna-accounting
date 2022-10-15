@@ -6,7 +6,15 @@ module Types
     field :description, String
     field :account_id, Integer, null: false
     field :amount, Float
-    field :created_at, GraphQL::Types::ISO8601DateTime, null: false
-    field :updated_at, GraphQL::Types::ISO8601DateTime, null: false
+    field :created_at, String
+    field :updated_at, String
+
+    def created_at
+      object.created_at.strftime('%d/%m/%Y')
+    end
+
+    def updated_at
+      object.updated_at.strftime('%d/%m/%Y')
+    end
   end
 end
