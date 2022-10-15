@@ -34,23 +34,51 @@
               <v-form>
                 <v-row class="pa-2">
                   <v-col cols="7">
-                    <v-text-field
-                      placeholder="Enter description"
-                      outlined
-                      dense
-                      hide-details
-                    ></v-text-field>
+                    <template v-if="account.id == 1">
+                      <v-text-field
+                        v-model="debitDescription"
+                        placeholder="Enter description"
+                        outlined
+                        dense
+                        hide-details
+                      ></v-text-field>
+                    </template>
+                    <template v-else>
+                      <v-text-field
+                        v-model="creditDescription"
+                        placeholder="Enter description"
+                        outlined
+                        dense
+                        hide-details
+                      ></v-text-field>
+                    </template>
                   </v-col>
                   <v-col cols="5" class="pl-1">
-                    <v-text-field
-                      placeholder="0.00"
-                      outlined
-                      dense
-                      hide-details
-                      prepend-inner-icon="mdi-currency-usd"
-                      append-outer-icon="mdi-send"
-                      @click:append-outer="createTransaction(account.id)"
-                    ></v-text-field>
+                    <template v-if="account.id == 1">
+                      <v-text-field
+                        v-model="debitAmount"
+                        placeholder="0.00"
+                        outlined
+                        dense
+                        hide-details
+                        prepend-inner-icon="mdi-currency-usd"
+                        append-outer-icon="mdi-plus-circle-outline"
+                        @click:append-outer="createTransaction(account.id)"
+                      ></v-text-field>
+                    </template>
+                    <template v-else>
+                      <v-text-field
+                        v-model="creditAmount"
+                        placeholder="0.00"
+                        type="number"
+                        outlined
+                        dense
+                        hide-details
+                        prepend-inner-icon="mdi-currency-usd"
+                        append-outer-icon="mdi-plus-circle-outline"
+                        @click:append-outer="createTransaction(account.id)"
+                      ></v-text-field>
+                    </template>
                   </v-col>
                 </v-row>
               </v-form>
@@ -85,11 +113,40 @@ export default {
     `
   },
   data: () => ({
-    //
+    debitDescription: '',
+    creditDescription: '',
+    debitAmount: null,
+    creditAmount: null
   }),
   methods: {
-    createTransaction(accountId) {
-      console.log(accountId)
+    async createTransaction(accountId) {
+      await this.$apollo.mutate({
+        mutation: gql `
+          mutation($description: String!, $amount: String!, $accountId: ID!) {
+            createTransaction(input: {
+              description: $description,
+              amount: $amount,
+              accountId: $accountId
+            }) {
+              transaction {
+                id
+                description
+                amount
+              }
+              errors
+            }
+          }
+        `,
+        variables: {
+          description: accountId == 1 ? this.debitDescription : this.creditDescription,
+          amount: accountId == 1 ? this.debitAmount : this.creditAmount,
+          accountId: accountId
+        }
+      }).then(data => {
+        if (data) this.$apollo.queries.accounts.refetch()
+      }).catch(error => {
+        console.log(error)
+      })
     }
   }
 }
