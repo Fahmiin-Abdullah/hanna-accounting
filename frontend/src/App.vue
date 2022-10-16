@@ -12,19 +12,20 @@
       <v-row>
         <v-col v-for="account in accounts" :key="account.id">
           <v-card>
-            <v-card-title>{{account.name}} Account - ${{account.balance}}</v-card-title>
+            <v-card-title>{{ account.name }} Account - ${{ account.balance }}</v-card-title>
             <v-list>
               <v-list-item-group>
                 <v-list-item
                   v-for="transaction in account.transactions"
                   :key="transaction.id"
+                  @click="editTransaction(transaction)"
                 >
                   <v-list-item-content>
-                    <v-list-item-subtitle class="primary--text pb-1">{{transaction.createdAt}}</v-list-item-subtitle>
+                    <v-list-item-subtitle class="primary--text pb-1">{{ transaction.createdAt }}</v-list-item-subtitle>
                     <v-list-item-title class="d-flex">
-                      {{transaction.description}}
+                      {{ transaction.description }}
                       <v-spacer></v-spacer>
-                      ${{transaction.amount}}
+                      ${{ transaction.amount }}
                     </v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
@@ -86,6 +87,70 @@
           </v-card>
         </v-col>
       </v-row>
+
+      <v-dialog
+        v-model="dialog"
+        width="500"
+      >
+        <v-card>
+          <v-card-title>
+            Edit/Delete Transaction {{ targetTransaction.id }}
+            <v-spacer></v-spacer>
+            <v-btn
+              icon
+              small
+              @click="dialog = false; targetTransaction = { id: null, description: '', amount: null }"
+            >
+              <v-icon>
+                mdi-close
+              </v-icon>
+            </v-btn>
+          </v-card-title>
+          <v-form>
+            <v-card-text>
+              <v-text-field
+                v-model="targetTransaction.description"
+                placeholder="Enter description"
+                outlined
+                dense
+                hide-details
+              ></v-text-field>
+            </v-card-text>
+            <v-card-text>
+              <v-text-field
+                v-model="targetTransaction.amount"
+                placeholder="0.00"
+                outlined
+                dense
+                hide-details
+                prepend-inner-icon="mdi-currency-usd"
+              ></v-text-field>
+            </v-card-text>
+          </v-form>
+          <v-card-actions>
+            <v-col class="pl-0">
+              <v-btn
+                color="error"
+                block
+                depressed
+                @click="deleteTransaction(targetTransaction.id)"
+              >
+                Delete
+              </v-btn>
+            </v-col>
+            <v-col class="pr-0">
+              <v-btn
+                color="success"
+                block
+                depressed
+                @click="updateTransaction(targetTransaction.id)"
+              >
+                Update
+              </v-btn>
+            </v-col>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-main>
   </v-app>
 </template>
@@ -106,6 +171,7 @@ export default {
             id
             description
             amount
+            accountId
             createdAt
           }
         }
@@ -116,7 +182,13 @@ export default {
     debitDescription: '',
     creditDescription: '',
     debitAmount: null,
-    creditAmount: null
+    creditAmount: null,
+    targetTransaction: {
+      id: null,
+      description: '',
+      amount: null
+    },
+    dialog: false
   }),
   methods: {
     async createTransaction(accountId) {
@@ -144,6 +216,72 @@ export default {
         }
       }).then(data => {
         if (data) this.$apollo.queries.accounts.refetch()
+      }).catch(error => {
+        console.log(error)
+      })
+    },
+    editTransaction(transaction) {
+      this.targetTransaction = transaction
+      this.dialog = true
+    },
+    async updateTransaction() {
+      await this.$apollo.mutate({
+        mutation: gql `
+          mutation($id: ID!, $description: String!, $amount: String!, $accountId: ID!) {
+            updateTransaction(input: {
+              id: $id,
+              description: $description,
+              amount: $amount,
+              accountId: $accountId
+            }) {
+              transaction {
+                id
+                description
+                amount
+              }
+              errors
+            }
+          }
+        `,
+        variables: {
+          id: this.targetTransaction.id,
+          description: this.targetTransaction.description,
+          amount: this.targetTransaction.amount,
+          accountId: this.targetTransaction.accountId
+        }
+      }).then(data => {
+        if (data) {
+          this.$apollo.queries.accounts.refetch()
+          this.dialog = false
+        }
+      }).catch(error => {
+        console.log(error)
+      })
+    },
+    async deleteTransaction() {
+      await this.$apollo.mutate({
+        mutation: gql `
+          mutation($id: ID!) {
+            deleteTransaction(input: {
+              id: $id
+            }) {
+              transaction {
+                id
+                description
+                amount
+              }
+              errors
+            }
+          }
+        `,
+        variables: {
+          id: this.targetTransaction.id
+        }
+      }).then(data => {
+        if (data) {
+          this.$apollo.queries.accounts.refetch()
+          this.dialog = false
+        }
       }).catch(error => {
         console.log(error)
       })

@@ -3,7 +3,7 @@ module Mutations
     argument :id, ID, required: true
     argument :description, String, required: true
     argument :account_id, ID, required: true
-    argument :amount, Float, required: true
+    argument :amount, String, required: true
 
     field :transaction, Types::TransactionType, null: false
     field :errors, [String], null: false
