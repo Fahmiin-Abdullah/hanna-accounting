@@ -12,7 +12,14 @@ It's a simple bare bones product development of digitilizing accounting. It has 
 
 The most interesting part of this project is making use of GraphQL as it's a new technology for me but certainly an interestring one relative to normal REST queries.
 
-Assumptions on the project requirement includes the functionalities of this MVP - I've implemented a bare bones version of it as specified in the requirements rather than going into the nitty gritty of how accounting actually works in real life. That's a separate fascination to dive into.
+Assumptions on the project
+
+1. Functionalities of this MVP - I've implemented a bare bones version of it as specified in the requirements rather than going into the nitty gritty of how accounting actually works in real life. That's a separate fascination to dive into.
+2. I've also left out things like user authentication, authorization and other parts from the app as I want to focus solely on developing the stated requirements and the API/FE itself.
+
+## Architecture
+
+Link to the DB schema would look like [this](https://dbdiagram.io/d/62cda011cc1bc14cc5a48d04). Each transaction are associated to an account and each account's balance is recalculated on new transaction proccessed.
 
 ## Project setup
 
@@ -42,3 +49,4 @@ Due to the time constraint as I have only a limited time to work on this project
 3. Stricter validations on FE and BE on inputs
 4. Extracting some variables into an `env` file like API url
 5. Whitelisting only certain URLs to allow communication with the API (important for prod)
+6. Following better conventions for writing GraphQL based API and FE app - right now is very cookie-cutter and basic
