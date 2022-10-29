@@ -9,9 +9,14 @@ class Transaction < ApplicationRecord
     return unless from_account.present? && to_account.present?
 
     ActiveRecord::Base.transaction do
-      from_account.balance = from_account.balance - amount
-      to_account.balance = to_account.balance + amount
+      from_acc_credit_trx = from_account.credit_transactions.sum(:amount)
+      from_acc_debit_trx = from_account.debit_transactions.sum(:amount)
+      from_account.balance = from_acc_credit_trx - from_acc_debit_trx
       from_account.save!
+
+      to_acc_credit_trx = to_account.credit_transactions.sum(:amount)
+      to_acc_debit_trx = to_account.debit_transactions.sum(:amount)
+      to_account.balance = to_acc_credit_trx - to_acc_debit_trx
       to_account.save!
     end
   end

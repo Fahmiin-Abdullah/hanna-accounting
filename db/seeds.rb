@@ -6,9 +6,9 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 
-cash_acc = Account.create!(name: 'Cash', balance: 1000)
-bank_acc = Account.create!(name: 'Bank', balance: 1000)
-comp_acc = Account.create!(name: 'Company', balance: 1000)
+cash_acc = Account.create!(name: 'Cash')
+bank_acc = Account.create!(name: 'Bank')
+comp_acc = Account.create!(name: 'Company')
 
 Transaction.create!(description: 'Deposit cash to bank', from_account_id: cash_acc.id, to_account_id: bank_acc.id, amount: 100)
 Transaction.create!(description: 'Withdraw from bank', from_account_id: bank_acc.id, to_account_id: cash_acc.id, amount: 500)
