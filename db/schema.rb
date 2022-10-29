@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_15_070813) do
+ActiveRecord::Schema.define(version: 2022_10_29_065024) do
 
   create_table "accounts", force: :cascade do |t|
     t.string "name"
@@ -21,12 +21,15 @@ ActiveRecord::Schema.define(version: 2022_10_15_070813) do
 
   create_table "transactions", force: :cascade do |t|
     t.text "description"
-    t.integer "account_id", null: false
     t.decimal "amount", precision: 10, scale: 2, default: "0.0"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["account_id"], name: "index_transactions_on_account_id"
+    t.integer "from_account_id"
+    t.integer "to_account_id"
+    t.index ["from_account_id"], name: "index_transactions_on_from_account_id"
+    t.index ["to_account_id"], name: "index_transactions_on_to_account_id"
   end
 
-  add_foreign_key "transactions", "accounts"
+  add_foreign_key "transactions", "accounts", column: "from_account_id"
+  add_foreign_key "transactions", "accounts", column: "to_account_id"
 end

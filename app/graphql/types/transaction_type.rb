@@ -4,7 +4,8 @@ module Types
   class TransactionType < Types::BaseObject
     field :id, ID, null: false
     field :description, String
-    field :account_id, Integer, null: false
+    field :from_account_id, Integer, null: false
+    field :to_account_id, Integer, null: false
     field :amount, String
     field :created_at, String
     field :updated_at, String

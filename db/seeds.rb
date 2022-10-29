@@ -6,10 +6,11 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 
-['Debit', 'Credit'].each do |ac|
-  account = Account.create!(name: ac)
+cash_acc = Account.create!(name: 'Cash', balance: 1000)
+bank_acc = Account.create!(name: 'Bank', balance: 1000)
+comp_acc = Account.create!(name: 'Company', balance: 1000)
 
-  5.times do |index|
-    account.transactions.create!(description: "Test description #{index + 1}", amount: (index + 1) * 100)
-  end
-end
+Transaction.create!(description: 'Deposit cash to bank', from_account_id: cash_acc.id, to_account_id: bank_acc.id, amount: 100)
+Transaction.create!(description: 'Withdraw from bank', from_account_id: bank_acc.id, to_account_id: cash_acc.id, amount: 500)
+Transaction.create!(description: 'Seed funding (bank transfer)', from_account_id: bank_acc.id, to_account_id: comp_acc.id, amount: 200)
+Transaction.create!(description: 'Seed funding (cash)', from_account_id: cash_acc.id, to_account_id: comp_acc.id, amount: 400)

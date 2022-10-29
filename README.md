@@ -50,3 +50,13 @@ Due to the time constraint as I have only a limited time to work on this project
 4. Extracting some variables into an `env` file like API url
 5. Whitelisting only certain URLs to allow communication with the API (important for prod)
 6. Following better conventions for writing GraphQL based API and FE app - right now is very cookie-cutter and basic
+
+---
+
+## Corrections
+
+I have since taken some time to review the double-entry book keeping system and adapted the application to work similarly.
+
+The following are the changes
+1. Changed a single `account_id` to a `from_account_id` and a `to_account_id` since it affects 2 accounts.
+2. Change the concept of accounts as only having a credit column. By right the accounts can be named anything and each account should have a debit and a credit column. This is to be reflected on the frontend.
