@@ -6,84 +6,68 @@
       dark
     >
       Hanna Accounting Software - Accounting simplified
+      <v-spacer></v-spacer>
+      <v-btn
+        color="success"
+        small
+        depressed
+        @click="dialog = true;"
+      >
+        <v-icon
+          small
+          class="pr-2"
+        >mdi-plus</v-icon>
+        Add new transaction
+      </v-btn>
     </v-app-bar>
 
     <v-main class="ma-5">
       <v-row>
-        <v-col v-for="account in accounts" :key="account.id">
+        <v-col v-for="account in accounts" :key="account.id" cols="4">
           <v-card>
-            <v-card-title>{{ account.name }} Account - ${{ account.balance }}</v-card-title>
-            <v-list>
+            <v-card-title>{{ account.name }} Acc. - ${{ account.balance }}</v-card-title>
+
+            <hr>
+
+            <v-list flat>
+              <p class="mb-0 pl-4 font-weight-bold">Credit</p>
               <v-list-item-group>
                 <v-list-item
-                  v-for="transaction in account.transactions"
+                  v-for="transaction in account.creditTransactions"
                   :key="transaction.id"
                   @click="editTransaction(transaction)"
                 >
                   <v-list-item-content>
                     <v-list-item-subtitle class="primary--text pb-1">{{ transaction.createdAt }}</v-list-item-subtitle>
-                    <v-list-item-title class="d-flex">
+                    <p class="d-flex mb-0">
                       {{ transaction.description }}
                       <v-spacer></v-spacer>
                       ${{ transaction.amount }}
-                    </v-list-item-title>
+                    </p>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-item-group>
+
+              <hr>
+
+              <p class="mb-0 pl-4 font-weight-bold pt-3">Debit</p>
+              <v-list-item-group>
+                <v-list-item
+                  v-for="transaction in account.debitTransactions"
+                  :key="transaction.id"
+                  @click="editTransaction(transaction)"
+                >
+                  <v-list-item-content>
+                    <v-list-item-subtitle class="primary--text pb-1">{{ transaction.createdAt }}</v-list-item-subtitle>
+                    <p class="d-flex mb-0">
+                      {{ transaction.description }}
+                      <v-spacer></v-spacer>
+                      ${{ transaction.amount }}
+                    </p>
                   </v-list-item-content>
                 </v-list-item>
               </v-list-item-group>
             </v-list>
-            <v-card-actions>
-              <v-form>
-                <v-row class="pa-2">
-                  <v-col cols="7">
-                    <template v-if="account.id == 1">
-                      <v-text-field
-                        v-model="debitDescription"
-                        placeholder="Enter description"
-                        outlined
-                        dense
-                        hide-details
-                      ></v-text-field>
-                    </template>
-                    <template v-else>
-                      <v-text-field
-                        v-model="creditDescription"
-                        placeholder="Enter description"
-                        outlined
-                        dense
-                        hide-details
-                      ></v-text-field>
-                    </template>
-                  </v-col>
-                  <v-col cols="5" class="pl-1">
-                    <template v-if="account.id == 1">
-                      <v-text-field
-                        v-model="debitAmount"
-                        placeholder="0.00"
-                        outlined
-                        dense
-                        hide-details
-                        prepend-inner-icon="mdi-currency-usd"
-                        append-outer-icon="mdi-plus-circle-outline"
-                        @click:append-outer="createTransaction(account.id)"
-                      ></v-text-field>
-                    </template>
-                    <template v-else>
-                      <v-text-field
-                        v-model="creditAmount"
-                        placeholder="0.00"
-                        type="number"
-                        outlined
-                        dense
-                        hide-details
-                        prepend-inner-icon="mdi-currency-usd"
-                        append-outer-icon="mdi-plus-circle-outline"
-                        @click:append-outer="createTransaction(account.id)"
-                      ></v-text-field>
-                    </template>
-                  </v-col>
-                </v-row>
-              </v-form>
-            </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
@@ -94,12 +78,17 @@
       >
         <v-card>
           <v-card-title>
-            Edit/Delete Transaction {{ targetTransaction.id }}
+            <template v-if="localTransaction.id">
+              Edit/Delete Transaction {{ localTransaction.id }}
+            </template>
+            <template v-else>
+              Add New Transaction
+            </template>
             <v-spacer></v-spacer>
             <v-btn
               icon
               small
-              @click="dialog = false; targetTransaction = { id: null, description: '', amount: null }"
+              @click="dialog = false; clearLocalTransaction();"
             >
               <v-icon>
                 mdi-close
@@ -109,16 +98,40 @@
           <v-form>
             <v-card-text>
               <v-text-field
-                v-model="targetTransaction.description"
+                v-model="localTransaction.description"
                 placeholder="Enter description"
                 outlined
                 dense
                 hide-details
               ></v-text-field>
             </v-card-text>
+            <v-card-text v-if="!localTransaction.id">
+              <v-select
+                v-model="localTransaction.fromAccountId"
+                :items="accounts.filter(acc => acc.id != localTransaction.toAccountId)"
+                item-value="id"
+                item-text="name"
+                placeholder="Account to be debited from"
+                outlined
+                dense
+                hide-details
+              ></v-select>
+            </v-card-text>
+            <v-card-text v-if="!localTransaction.id">
+              <v-select
+                v-model="localTransaction.toAccountId"
+                :items="accounts.filter(acc => acc.id != localTransaction.fromAccountId)"
+                item-value="id"
+                item-text="name"
+                placeholder="Account to be credited to"
+                outlined
+                dense
+                hide-details
+              ></v-select>
+            </v-card-text>
             <v-card-text>
               <v-text-field
-                v-model="targetTransaction.amount"
+                v-model="localTransaction.amount"
                 placeholder="0.00"
                 outlined
                 dense
@@ -127,13 +140,13 @@
               ></v-text-field>
             </v-card-text>
           </v-form>
-          <v-card-actions>
+          <v-card-actions v-if="localTransaction.id">
             <v-col class="pl-0">
               <v-btn
                 color="error"
                 block
                 depressed
-                @click="deleteTransaction(targetTransaction.id)"
+                @click="deleteTransaction(localTransaction.id)"
               >
                 Delete
               </v-btn>
@@ -143,11 +156,21 @@
                 color="success"
                 block
                 depressed
-                @click="updateTransaction(targetTransaction.id)"
+                @click="updateTransaction(localTransaction.id)"
               >
                 Update
               </v-btn>
             </v-col>
+          </v-card-actions>
+          <v-card-actions v-else>
+            <v-btn
+              color="success"
+              block
+              depressed
+              @click="createTransaction()"
+            >
+              Save
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -167,11 +190,20 @@ export default {
           id
           name
           balance
-          transactions {
+          creditTransactions {
             id
             description
             amount
-            accountId
+            fromAccountId
+            toAccountId
+            createdAt
+          }
+          debitTransactions {
+            id
+            description
+            amount
+            fromAccountId
+            toAccountId
             createdAt
           }
         }
@@ -179,30 +211,35 @@ export default {
     `
   },
   data: () => ({
-    debitDescription: '',
-    creditDescription: '',
-    debitAmount: null,
-    creditAmount: null,
-    targetTransaction: {
+    description: '',
+    amount: null,
+    fromAccountId: null,
+    toAccountId: null,
+    localTransaction: {
       id: null,
       description: '',
+      fromAccountId: null,
+      toAccountId: null,
       amount: null
     },
     dialog: false
   }),
   methods: {
-    async createTransaction(accountId) {
+    async createTransaction() {
       await this.$apollo.mutate({
         mutation: gql `
-          mutation($description: String!, $amount: String!, $accountId: ID!) {
+          mutation($description: String!, $amount: String!, $fromAccountId: ID!, $toAccountId: ID!) {
             createTransaction(input: {
               description: $description,
               amount: $amount,
-              accountId: $accountId
+              fromAccountId: $fromAccountId,
+              toAccountId: $toAccountId,
             }) {
               transaction {
                 id
                 description
+                fromAccountId
+                toAccountId
                 amount
               }
               errors
@@ -210,33 +247,39 @@ export default {
           }
         `,
         variables: {
-          description: accountId == 1 ? this.debitDescription : this.creditDescription,
-          amount: accountId == 1 ? this.debitAmount : this.creditAmount,
-          accountId: accountId
+          description: this.localTransaction.description,
+          fromAccountId: this.localTransaction.fromAccountId,
+          toAccountId: this.localTransaction.toAccountId,
+          amount: this.localTransaction.amount
         }
       }).then(data => {
+        this.dialog = false
+        this.clearLocalTransaction()
         if (data) this.$apollo.queries.accounts.refetch()
       }).catch(error => {
         console.log(error)
       })
     },
     editTransaction(transaction) {
-      this.targetTransaction = transaction
+      this.localTransaction = transaction
       this.dialog = true
     },
     async updateTransaction() {
       await this.$apollo.mutate({
         mutation: gql `
-          mutation($id: ID!, $description: String!, $amount: String!, $accountId: ID!) {
+          mutation($id: ID!, $description: String!, $amount: String!, $fromAccountId: ID!, $toAccountId: ID!) {
             updateTransaction(input: {
               id: $id,
               description: $description,
               amount: $amount,
-              accountId: $accountId
+              fromAccountId: $fromAccountId,
+              toAccountId: $toAccountId
             }) {
               transaction {
                 id
                 description
+                fromAccountId
+                toAccountId
                 amount
               }
               errors
@@ -244,10 +287,11 @@ export default {
           }
         `,
         variables: {
-          id: this.targetTransaction.id,
-          description: this.targetTransaction.description,
-          amount: this.targetTransaction.amount,
-          accountId: this.targetTransaction.accountId
+          id: this.localTransaction.id,
+          description: this.localTransaction.description,
+          fromAccountId: this.localTransaction.fromAccountId,
+          toAccountId: this.localTransaction.toAccountId,
+          amount: this.localTransaction.amount
         }
       }).then(data => {
         if (data) {
@@ -268,6 +312,8 @@ export default {
               transaction {
                 id
                 description
+                fromAccountId
+                toAccountId
                 amount
               }
               errors
@@ -275,7 +321,7 @@ export default {
           }
         `,
         variables: {
-          id: this.targetTransaction.id
+          id: this.localTransaction.id
         }
       }).then(data => {
         if (data) {
@@ -285,6 +331,15 @@ export default {
       }).catch(error => {
         console.log(error)
       })
+    },
+    clearLocalTransaction() {
+      this.localTransaction = {
+        id: null,
+        description: '',
+        fromAccountId: null,
+        toAccountId: null,
+        amount: null
+      }
     }
   }
 }
