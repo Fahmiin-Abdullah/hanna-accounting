@@ -8,7 +8,7 @@ module Types
     field :accounts, [Types::AccountType], null: false
 
     def accounts
-      Account.includes(:transactions).all
+      Account.includes(:credit_transactions, :debit_transactions).all
     end
   end
 end
